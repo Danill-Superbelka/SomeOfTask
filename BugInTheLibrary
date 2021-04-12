@@ -1,5 +1,5 @@
 import Foundation
-var string = ""
+var string = " "
 while let mass: String = readLine() {
     string += mass + "\n"
 }
