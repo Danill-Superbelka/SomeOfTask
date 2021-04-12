@@ -1,0 +1,31 @@
+//Описание задачи.
+/*
+В коде сторонней библиотеки обнаружился баг. Вместо отсортированного массива строк библиотека возвращает массив случайно упорядоченных строк. К счастью, в каждую строку в случайной позиции библиотека записывает порядковый индекс – позицию, где строка должна быть в выходном массиве, например, "str2ing".
+Ваша задача обработать баг библиотеки и написать функцию, которая:
+- извлечёт индекс из строки;
+- с помощью индекса расположит строку в нужной позиции.
+*/
+
+//Код
+import Foundation
+var string = ""
+while let mass: String = readLine() {
+    string += mass + "\n"
+}
+if string.isEmpty == true{
+    print(" ")
+} else {
+    let splitMass = string.components(separatedBy: "\n")
+var massOut = [String](repeating: " ", count: splitMass.count)
+for var char in splitMass {
+    for i in char {
+        if i.isNumber {
+            let num = Int(String(i))
+            let index = char.firstIndex(of: i)
+                char.remove(at: index!)
+                massOut[num! - 1] = char
+        }
+    }
+}
+print(massOut.joined(separator: "\n"))
+}
