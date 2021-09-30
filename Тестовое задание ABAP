@@ -1,0 +1,99 @@
+import UIKit
+
+struct Weather: Codable {
+   
+    struct Daily: Codable {
+    
+        struct Temp: Codable {
+            let night: Double
+            let max: Double
+            let min: Double
+        }
+        
+        struct FeelsLike: Codable {
+            let night: Double
+        }
+        
+        let dt: Date
+        let sunrise: Date
+        let sunset: Date
+        let temp: Temp
+        let feels_like: FeelsLike
+    }
+    let daily: [Daily]
+}
+
+struct Day {
+    var date: String
+    var temperatureDifference: Double
+    var daylightHour: String
+}
+
+
+
+let url = URL(string: "https://api.openweathermap.org/data/2.5/onecall?lat=59.934256&lon=30.335123&exclude=current,minutely,hourly,alerts&appid=38b4a54648c28f3f6c543eef683881cd")!
+
+//формат для отображения даты
+let dateFormatter = DateFormatter()
+dateFormatter.dateFormat = "MMM, EEEE d"
+
+//формат для отображения времени
+let dateFormatterHour = DateFormatter()
+dateFormatterHour.dateFormat = "HH:mm"
+
+var request = URLRequest(url: url)
+
+URLSession.shared.dataTask(with: request) { data, response, error in
+    guard let data = data else {
+        print("No data response: \(error?.localizedDescription ?? "Unknown error").")
+        return
+    }
+    
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .secondsSince1970
+    guard let forecast = try? decoder.decode(Weather.self, from: data) else {
+        print("Ошибка декодирования")
+        return
+    }
+    
+      var days = [Day]()
+
+      for day in forecast.daily{
+        
+        let sunriseTime = day.sunrise.timeIntervalSinceNow
+        let sunsetTime = day.sunset.timeIntervalSinceNow
+       
+        let tempDiff = day.temp.night - day.feels_like.night
+        let dayHour =  sunsetTime - sunriseTime
+        
+        let daylightHour = dateFormatterHour.string(from: Date(timeIntervalSinceNow: dayHour))
+        
+        days.append(Day(date: dateFormatter.string(from: day.dt), temperatureDifference: tempDiff,daylightHour: daylightHour ))
+        
+      }
+    
+    question_1(days: days)
+    question_2(days: days)
+    
+}.resume()
+
+// Поиск минимального значения "разница температуры", поиск элемента с найденым минималньым значением и извлечение индекса подходящего элемента
+
+func question_1(days: [Day]) {
+    let minDiff = days.min(by:{$0.temperatureDifference < $1.temperatureDifference})?.temperatureDifference ?? 0
+    let indexOfDay = days.indices.filter { days[$0].temperatureDifference == minDiff}
+    let index = indexOfDay[0]
+    print("Задание А. День с минимально различной температурой: \(days[index].date) с разницей в \(NSString(format: "%.2f", days[index].temperatureDifference)) °C ")
+}
+
+// Аналогично первому заданию, только по максимальному значению "Продолжительность дня". P.S. Выводить поиск индекса элемента в отдельную функцию не успеваю.
+
+func question_2(days: [Day]) {
+    let fiveDays = days.prefix(5)
+    
+    let maxDaylight = fiveDays.max(by: {$0.daylightHour < $1.daylightHour})?.daylightHour ?? "Ошибка определия продолжительности дня"
+    let indexOfDay = days.indices.filter {days[$0].daylightHour == maxDaylight}
+    let index = indexOfDay[0]
+    
+    print("Задание В. День с максимальной продолжительностью дня: \(fiveDays[index].date), продолжительность дня составит \(fiveDays[index].daylightHour)")
+}
